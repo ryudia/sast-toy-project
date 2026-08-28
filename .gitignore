@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# Test / cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Runtime / temporary analysis data
+tmp/
+temp/
+workspace/
+uploads/
+extracted/
+logs/
+
+# Generated temporary results
+results/*.tmp
+
+# Archives and large raw datasets
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# OS files
+.DS_Store
+Thumbs.db
