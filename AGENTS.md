@@ -238,10 +238,31 @@ The primary objective is not broad vulnerability coverage. The primary objective
   - Python
   - Java
   - JavaScript
+
 - First implemented vertical slice:
   - Python
   - CWE-95
-  - Regex-based baseline analyzer
+  - AST-based direct-call analyzer
+  - Initial detection target: direct `eval(...)` calls
+
+- Current analysis boundary:
+  - Function alias resolution is not yet implemented.
+  - Import alias resolution is not yet implemented.
+  - Dynamic attribute access is not yet analyzed.
+  - Data-flow and interprocedural analysis are deferred.
+
+- Evaluation:
+  - Ground Truth-based TP / FP / FN / TN evaluation
+  - Precision / Recall measurement
+  - Add a minimal Regex-based CWE-95 detector as a comparison baseline.
+  - Evaluate Regex and AST detectors against the same Ground Truth dataset.
+  - Record representative FP/FN cases and explain why each detector succeeds or fails.
+
+- Extensibility:
+  - Detector interfaces and evaluation data should remain implementation-agnostic where practical.
+  - Do not require the current MVP to implement a hybrid Regex/AST analysis engine.
+  - Future work may use the comparison results to determine whether different analysis techniques should be selected or combined by rule.
+
 - Java and JavaScript implementation are deferred until the Python vertical slice works end-to-end.
 
 ## Core Architecture
@@ -299,23 +320,34 @@ Normalized Finding
 - Keep future fields such as remediation and trace optional.
 - Do not couple Finding representation to one specific analyzer implementation.
 
-## Analyzer Evolution
+## Analyzer Comparison and Evolution
 
-Use this progression:
+The current Python CWE-95 vertical slice starts with an AST-based direct-call analyzer.
+
+A minimal Regex-based detector should be implemented separately as a comparison baseline.
+
+Both detectors should be evaluated against the same Ground Truth whenever possible:
 
 ```text
-Regex baseline
-      |
-      v
-AST analysis
-      |
-      v
-Data Flow analysis
+                Ground Truth
+                    |
+          +---------+---------+
+          |                   |
+          v                   v
+   Regex Baseline       AST Analyzer
+          |                   |
+          +---------+---------+
+                    |
+                    v
+             TP / FP / FN / TN
+             Precision / Recall
 ```
 
-- Regex is intentionally a baseline whose FP/FN limitations should be measurable.
-- Preserve the same Ground Truth and evaluation methodology when comparing analyzer generations whenever possible.
-- Do not silently replace the Regex baseline with AST or Data Flow before baseline metrics have been collected.
+- Regex is used as a lightweight comparison baseline, not as a mandatory predecessor to AST analysis.
+- Preserve the same Ground Truth and evaluation methodology when comparing detector implementations.
+- Record representative FP and FN cases for each detector.
+- Do not require the current MVP to implement a hybrid Regex/AST analyzer.
+- Data Flow, symbol resolution, and hybrid analysis strategies are future extensions unless explicitly brought into the current scope.
 
 ## Secure Ingestion Rules
 
@@ -430,13 +462,13 @@ AI should initially assist with explanation and remediation, not replace the det
 
 ## Initial Completion Criteria
 
-The first vertical slice is complete when all of the following work together:
+The first Python CWE-95 vertical slice is complete when all of the following work together:
 
 ```text
-Python CWE-95 test cases
+Python CWE-95 Test Cases
         |
         v
-Python Regex Analyzer
+Python AST Analyzer
         |
         v
 Normalized Findings
@@ -454,5 +486,31 @@ TP / FP / FN / TN
 Precision / Recall
 ```
 
-The first implementation should use a small reviewed dataset before scaling to larger benchmark corpora.
+The comparison experiment extends the completed vertical slice with a minimal Regex-based baseline:
 
+```text
+             Same Ground Truth
+                    |
+            +-------+-------+
+            |               |
+            v               v
+     Regex Baseline    AST Analyzer
+            |               |
+            +-------+-------+
+                    |
+                    v
+           TP / FP / FN / TN
+           Precision / Recall
+                    |
+                    v
+        Representative FP / FN
+             Case Analysis
+```
+
+- The AST-based analyzer is the primary implementation of the first Python CWE-95 vertical slice.
+- The Regex-based detector is a separate comparison baseline and does not replace the AST-based analyzer.
+- Regex and AST detectors should be evaluated against the same Ground Truth and evaluation methodology whenever possible.
+- Representative FP and FN cases should be recorded to explain where each approach succeeds or fails.
+- Completion of the current MVP does not require a hybrid Regex/AST analyzer.
+- Hybrid analysis, symbol resolution, data-flow analysis, and other advanced analysis strategies remain future work unless explicitly brought into scope.
+- The first implementation should use a small reviewed dataset before scaling to larger benchmark corpora.
