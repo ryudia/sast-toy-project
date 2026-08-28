@@ -223,3 +223,236 @@ Hooks own normal skill-active and workflow-state persistence under `.omx/state/`
 ## Setup
 
 Execute `omx setup` to install all components. Execute `omx doctor` to verify installation.
+
+# SAST Toy Project Overlay
+
+## Project Goal
+
+Build an extensible SAST architecture and validate the first end-to-end vertical slice using Python CWE-95.
+
+The primary objective is not broad vulnerability coverage. The primary objective is to produce analyzer findings that can be independently compared against Ground Truth and evaluated using TP, FP, FN, TN, Precision, and Recall.
+
+## Current Scope
+
+- Architecture must remain extensible to:
+  - Python
+  - Java
+  - JavaScript
+- First implemented vertical slice:
+  - Python
+  - CWE-95
+  - Regex-based baseline analyzer
+- Java and JavaScript implementation are deferred until the Python vertical slice works end-to-end.
+
+## Core Architecture
+
+Preserve the following responsibility boundaries:
+
+```text
+Untrusted Source
+      |
+      v
+Secure Ingestion
+      |
+      v
+Language Routing
+      |
+      v
+SAST Analyzer
+      |
+      v
+Raw Detection
+      |
+      v
+Finding Normalizer
+      |
+      v
+Normalized Finding
+      |
+      +---------> Evaluation <--------- Ground Truth
+      |
+      +---------> Reporting
+```
+
+## Ground Truth Rules
+
+- Analyzer code must never read, import, or depend on Ground Truth.
+- Ground Truth belongs only to the evaluation path.
+- Ground Truth records actual vulnerability state only.
+- Do not store TP, FP, FN, or TN labels inside Ground Truth.
+- TP, FP, FN, and TN are derived only after comparing analyzer predictions with Ground Truth.
+- Initial evaluation should be case-level unless a task explicitly requires location-level matching.
+
+## Finding Rules
+
+- Language-specific analyzer output must be normalized before evaluation or reporting.
+- Prefer a shared Finding model across all analyzers.
+- Initial normalized Finding should support at least:
+  - rule_id
+  - language
+  - cwe
+  - severity
+  - file
+  - line
+  - evidence
+  - message
+- Keep future fields such as remediation and trace optional.
+- Do not couple Finding representation to one specific analyzer implementation.
+
+## Analyzer Evolution
+
+Use this progression:
+
+```text
+Regex baseline
+      |
+      v
+AST analysis
+      |
+      v
+Data Flow analysis
+```
+
+- Regex is intentionally a baseline whose FP/FN limitations should be measurable.
+- Preserve the same Ground Truth and evaluation methodology when comparing analyzer generations whenever possible.
+- Do not silently replace the Regex baseline with AST or Data Flow before baseline metrics have been collected.
+
+## Secure Ingestion Rules
+
+Treat all uploaded or externally supplied source bundles as untrusted input.
+
+- Never execute analyzed source code.
+- Validate archive structure before extraction.
+- Prevent path traversal / Zip Slip.
+- Apply file-count and size limits.
+- Define symlink handling explicitly.
+- Define nested archive handling explicitly.
+- Use path normalization.
+- Keep temporary extraction isolated from the repository.
+- Remove temporary analysis data when no longer needed.
+
+## Workspace Boundary
+
+Git repository:
+
+```text
+~/projects/sast-toy-project
+```
+
+Use it for:
+
+- application source code
+- analyzer code
+- rules
+- Ground Truth metadata
+- small reviewed test fixtures
+- research notes
+- reproducible experiment definitions
+
+External workspace:
+
+```text
+~/sast-workspace
+```
+
+Use it for:
+
+- raw ZIP archives
+- untrusted inputs
+- extracted source trees
+- large OWASP / Juliet datasets
+- temporary analysis files
+- transient runtime artifacts
+
+Do not commit raw untrusted inputs, large benchmark archives, secrets, credentials, tokens, or temporary extraction output.
+
+## Research References
+
+Use references according to their role:
+
+- MITRE CWE:
+  - vulnerability definition and classification criteria
+- OWASP Benchmark:
+  - Ground Truth and evaluation structure reference
+- Semgrep:
+  - rule and rule-test structure reference
+- NIST Juliet / SARD:
+  - control-flow and data-flow variant reference
+- Sparrow Cloud:
+  - product-flow and SAST service UX benchmark
+
+Do not treat Sparrow Cloud as the Ground Truth dataset or analyzer-performance benchmark.
+
+## Productization Boundary
+
+The following are future extensions unless explicitly requested:
+
+- SARIF reporter
+- Web UI
+- AI remediation guide
+- Git repository ingestion
+- CI/CD integration
+- authentication
+- multi-user project management
+- persistent job queues
+- production database integration
+
+Do not expand current implementation scope into these areas before the first Python vertical slice is complete.
+
+## AI Extension Rule
+
+If AI support is introduced later:
+
+```text
+Static Analyzer
+      |
+      v
+Normalized Finding
+      |
+      v
+AI Guide
+      |
+      v
+Explanation / Remediation
+```
+
+AI should initially assist with explanation and remediation, not replace the deterministic analyzer used for Ground Truth performance evaluation.
+
+## Development Rules
+
+- Prefer the existing architecture before introducing new abstractions.
+- Keep changes small, reviewable, and reversible.
+- Preserve experiment reproducibility.
+- Avoid adding dependencies unless they materially improve the current vertical slice.
+- If implementation difficulty suggests changing an architectural boundary, explain the trade-off before changing it.
+- Do not expand language or CWE scope merely because the structure allows it.
+- Prioritize completing one end-to-end path over partially implementing many features.
+
+## Initial Completion Criteria
+
+The first vertical slice is complete when all of the following work together:
+
+```text
+Python CWE-95 test cases
+        |
+        v
+Python Regex Analyzer
+        |
+        v
+Normalized Findings
+        |
+        v
+Ground Truth Matcher
+        |
+        v
+Evaluator
+        |
+        v
+TP / FP / FN / TN
+        |
+        v
+Precision / Recall
+```
+
+The first implementation should use a small reviewed dataset before scaling to larger benchmark corpora.
+
