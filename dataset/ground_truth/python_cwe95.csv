@@ -3,3 +3,5 @@ PY-CWE95-001,vulnerable_direct_eval.py,CWE-95,true
 PY-CWE95-002,vulnerable_flow_eval.py,CWE-95,true
 PY-CWE95-003,safe_literal_eval.py,CWE-95,false
 PY-CWE95-004,alias_vulnerable.py,CWE-95,true
+PY-CWE95-005,safe_eval_comment.py,CWE-95,false
+PY-CWE95-006,safe_eval_string.py,CWE-95,false

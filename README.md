@@ -1,62 +1,60 @@
 # SAST Toy Project
 
-Ground Truth 기반으로 정적 분석기의 탐지 성능을 평가하는 학습용 SAST 프로젝트입니다.
+정적 분석(SAST)의 기본 구조를 직접 구현하고 이해하기 위한 학습용 Toy Project입니다.
+
+현재 단계에서는 Python CWE-95를 대상으로 작은 분석기를 구현하고,
+Ground Truth를 이용하여 Regex 기반 탐지와 AST 기반 탐지의 동작 차이를 확인합니다.
 
 ## Initial Scope
 
-* Multi-language extensible architecture
-
-  * Python
-  * Java
-  * JavaScript
-
-* First vertical slice
-
-  * Python
-  * CWE-95
-  * AST-based analyzer
-  * Direct `eval(...)` call detection
-
-* Analyzer comparison
-
-  * AST-based analyzer
-  * Regex-based baseline
-
-* Ground Truth evaluation
-
-  * TP
-  * FP
-  * FN
-  * TN
-  * Precision
-  * Recall
+- Multi-language extensible architecture
+  - Python
+  - Java
+  - JavaScript
+- First analyzer
+  - Python
+  - CWE-95
+  - Direct `eval(...)` call detection
+- Analyzer comparison
+  - AST-based analyzer
+  - Minimal Regex baseline
+- Ground Truth evaluation
+  - TP / FP / FN / TN
+  - Precision / Recall
 
 ## Current Progress
 
-현재 Python CWE-95를 대상으로 첫 번째 분석기를 구현하고 있습니다.
+Python CWE-95를 대상으로 최소 AST Analyzer와 Regex baseline을 구현했습니다.
 
-Python AST를 이용하여 직접적인 `eval(...)` 호출을 탐지하며, Ground Truth 데이터와 비교하여 탐지 성능을 평가합니다.
+두 detector를 동일한 Ground Truth에 실행하여 텍스트 패턴 기반 탐지와
+AST 기반 구조 탐지의 기본적인 동작 차이를 확인합니다.
 
 ```text
-Python Source
-     |
-     v
-AST Analyzer
-     |
-     v
-Detection Result
-     |
-     v
-Ground Truth Comparison
-     |
-     v
-TP / FP / FN / TN
-     |
-     v
-Precision / Recall
+                Ground Truth
+                    |
+          +---------+---------+
+          |                   |
+          v                   v
+   Regex Baseline       AST Analyzer
+          |                   |
+          +---------+---------+
+                    |
+                    v
+             TP / FP / FN / TN
+             Precision / Recall
 ```
 
-함수 별칭, 데이터 흐름, 심볼 해석과 같은 고급 분석은 현재 범위에 포함하지 않으며, 기본 분석기의 한계를 확인한 이후 단계적으로 확장할 예정입니다.
+현재 비교 결과:
+
+| Detector | TP | FP | FN | TN | Precision | Recall |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Regex Baseline | 2 | 2 | 1 | 1 | 0.5000 | 0.6667 |
+| AST Analyzer | 2 | 0 | 1 | 3 | 1.0000 | 0.6667 |
+
+이 결과는 의도적으로 구성한 작은 Ground Truth에서 두 detector의 동작 차이를 확인한 결과이며,
+일반적인 detector의 성능 우위를 의미하지 않습니다.
+
+Alias Resolution, Name Binding, Data Flow와 같은 고급 분석은 현재 범위에 포함하지 않습니다.
 
 ## Architecture
 
@@ -82,49 +80,45 @@ Finding Normalizer
 Normalized Finding
       |
       +---------> Evaluation <--------- Ground Truth
-      |               |
-      |               v
-      |        TP / FP / FN / TN
-      |               |
-      |               v
-      |       Precision / Recall
       |
       +---------> Reporting
 ```
 
+## Run
+
+분석기 비교:
+
+```bash
+python3 -m evaluator.run_evaluation
+```
+
+테스트:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
 ## External Workspace
 
-비신뢰 ZIP, 압축 해제된 소스, 대용량 원본 데이터셋, 임시 분석 파일은 Git 저장소 외부에서 관리합니다.
-
-Default workspace:
+비신뢰 ZIP, 압축 해제된 소스, 대용량 원본 데이터셋,
+임시 분석 파일은 Git 저장소 외부에서 관리합니다.
 
 ```text
 ~/sast-workspace/
 ```
 
-구분:
-
-* Git repository
-
-  * 소스 코드
-  * 분석기 코드
-  * Rule
-  * Ground Truth
-  * 선정된 테스트 케이스
-  * 연구 메모
-
-* External workspace
-
-  * 원본 ZIP
-  * 대용량 데이터셋
-  * 압축 해제된 소스
-  * 임시 분석 파일
-
 ## Roadmap
 
-1. Python CWE-95 AST Analyzer
-2. Ground Truth 기반 성능 평가
-3. Regex baseline과 AST Analyzer 비교
-4. Secure Ingestion
-5. Language Routing
-6. 추가 CWE 및 Java / JavaScript 확장
+### Completed
+
+- Python CWE-95 최소 AST Analyzer
+- 작은 Ground Truth 기반 동작 검증
+- Minimal Regex baseline과 AST Analyzer 비교
+
+### Next
+
+1. Secure Ingestion
+2. Language Routing
+3. 추가 CWE 및 Java / JavaScript 확장
+
+Alias Resolution, Name Binding, Data Flow와 같은 고급 분석은 현재 Roadmap에 포함하지 않습니다.
